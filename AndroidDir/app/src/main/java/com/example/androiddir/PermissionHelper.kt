@@ -1,8 +1,7 @@
-package jp.co.secom.design.cloudcam.core.helper
+package com.example.androiddir
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -14,8 +13,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import jp.co.secom.design.cloudcam.core.util.CommonUtils.getApplicationName
-import jp.co.secom.design.cloudcam.features.dialog.DialogAlert
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.set
@@ -36,12 +33,7 @@ class PermissionHelper {
 
     companion object {
         const val REQUEST_CODE_ASK_PERMISSIONS = 1122
-        const val IS_FIRST_TIME_REQUEST_PERMISSION_CAMERA = "IS_FIRST_TIME_REQUEST_PERMISSION_CAMERA"
         const val IS_FIRST_TIME_REQUEST_PERMISSION_GALLERY = "IS_FIRST_TIME_REQUEST_PERMISSION_GALLERY"
-        const val IS_FIRST_TIME_REQUEST_PERMISSION_READ_CONTACTS = "IS_FIRST_TIME_REQUEST_PERMISSION_READ_CONTACTS"
-        const val IS_FIRST_TIME_REQUEST_PERMISSION_LOCATION = "IS_FIRST_TIME_REQUEST_PERMISSION_LOCATION"
-        const val IS_FIRST_TIME_REQUEST_PERMISSION_CALL_PHONE = "IS_FIRST_TIME_REQUEST_PERMISSION_CALL_PHONE"
-        const val IS_FIRST_TIME_REQUEST_PERMISSION_VIDEO_CALL = "IS_FIRST_TIME_REQUEST_PERMISSION_VIDEO_CALL"
     }
 
     // -------------
@@ -70,15 +62,15 @@ class PermissionHelper {
 
     fun getStatePermissions(type: PermissionType) {
         this.mCurrentType = type
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        isAllowPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val listNotGranted = java.util.ArrayList<String>()
             if (type == PermissionType.GALLERY) {
                 getNotGranted(listNotGranted, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 getNotGranted(listNotGranted, Manifest.permission.READ_EXTERNAL_STORAGE)
             }
-            isAllowPermissions = listNotGranted.size <= 0
+            listNotGranted.size <= 0
         } else {
-            isAllowPermissions = true
+            true
         }
     }
 
@@ -90,7 +82,7 @@ class PermissionHelper {
                 val notYetGrants = permissions.listNotGranted
 
                 if (!permissions.listRationale.isNullOrEmpty() && permissions.listNotGranted!!.size == permissions.listRationale!!.size) {
-                    val preName = getNameType(type)
+                    val preName = getNameType()
                     if (!mSharedPre!!.getBoolean(preName, false)) {
                         mSharedPre!!.edit().putBoolean(preName, true).apply()
                         requestPermissions(notYetGrants!!.toTypedArray(), REQUEST_CODE_ASK_PERMISSIONS)
@@ -212,15 +204,8 @@ class PermissionHelper {
         }
     }
 
-    private fun getNameType(type: PermissionType): String {
-        return when (type) {
-            PermissionType.CAMERA -> IS_FIRST_TIME_REQUEST_PERMISSION_CAMERA
-            PermissionType.GALLERY -> IS_FIRST_TIME_REQUEST_PERMISSION_GALLERY
-            PermissionType.READ_CONTACTS -> IS_FIRST_TIME_REQUEST_PERMISSION_READ_CONTACTS
-            PermissionType.LOCATION -> IS_FIRST_TIME_REQUEST_PERMISSION_LOCATION
-            PermissionType.CALL_PHONE -> IS_FIRST_TIME_REQUEST_PERMISSION_CALL_PHONE
-            PermissionType.VIDEO_CALL -> IS_FIRST_TIME_REQUEST_PERMISSION_VIDEO_CALL
-        }
+    private fun getNameType(): String {
+        return IS_FIRST_TIME_REQUEST_PERMISSION_GALLERY
     }
 
     private fun startActivityForResult(intent: Intent, requestCode: Int) {
@@ -258,14 +243,6 @@ class PermissionHelper {
         builder.create().show()
     }
 
-    fun dialogPermissionSetting(context: Context) {
-        val messageJP = "カメラへのアクセスを許可する必要がございます。「設定」→「アプリ」より「${getApplicationName(context)}」を選択し、「権限」よりカメラとストレージのアクセスを許可してください。"
-        DialogAlert()
-            .setMessage(messageJP)
-            .setTitleNegative("許可しない").onNegative { }
-            .setTitlePositive("許可する").onPositive { showSetting() }
-            .show(context)
-    }
 
     fun showSetting() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
